@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "../assets/sounds/add.mp3";
 import {
   View,
   Text,
@@ -10,6 +11,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Audio } from "expo-av";
 
 const PRIMARY_COLOR = "#00796B";
 const COMPLETED_COLOR = "#B0BEC5";
@@ -43,21 +45,35 @@ export default function TaskManager() {
     }
   };
 
-  const addTask = () => {
+  const playSound = async (soundFile) => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(soundFile);
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  };
+
+  const addTask = async () => {
     if (!newTask.trim()) return;
     const task = { id: Date.now().toString(), text: newTask, completed: false };
     setTasks([task, ...tasks]);
     setNewTask("");
+
+    await playSound(require("../assets/sounds/add.mp3"));
+  };
+
+  const deleteTask = async (id) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+
+
+    await playSound(require("../assets/sounds/delete.mp3"));
   };
 
   const toggleComplete = (id) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
-  };
-
-  const deleteTask = (id) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
   const renderItem = ({ item }) => (
@@ -101,7 +117,7 @@ export default function TaskManager() {
       </View>
 
       <Text style={styles.header}>📝 My Tasks</Text>
-      
+
       <FlatList
         data={tasks}
         keyExtractor={(item) => item.id}
